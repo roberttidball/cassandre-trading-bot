@@ -244,6 +244,9 @@ public final class FXMacroDataClient {
     connection.setRequestMethod("GET");
     connection.setConnectTimeout(CONNECT_TIMEOUT_IN_MILLISECONDS);
     connection.setReadTimeout(READ_TIMEOUT_IN_MILLISECONDS);
+    if (!apiKey.isEmpty()) {
+      connection.setRequestProperty("X-API-Key", apiKey);
+    }
     return connection;
   }
 
@@ -260,10 +263,7 @@ public final class FXMacroDataClient {
   }
 
   String buildUrl(final String path) {
-    if (apiKey.isEmpty()) {
-      return baseUrl + path;
-    }
-    return baseUrl + path + "?api_key=" + URLEncoder.encode(apiKey, StandardCharsets.UTF_8);
+    return baseUrl + path;
   }
 
   private static String norm(final String value) {
