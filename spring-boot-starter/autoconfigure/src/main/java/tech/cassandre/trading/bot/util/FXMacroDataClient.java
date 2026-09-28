@@ -317,17 +317,6 @@ public final class FXMacroDataClient {
     return get("/press-releases/" + norm(currency) + page(limit, offset));
   }
 
-  /**
-   * Gets central banker reference data for a currency.
-   *
-   * @param currency ISO 4217 currency code
-   * @return raw JSON response
-   * @throws IOException if the HTTP request fails
-   */
-  public String centralBankers(final String currency) throws IOException {
-    return get("/central_bankers/" + norm(currency));
-  }
-
   private String get(final String path) throws IOException {
     final HttpURLConnection connection = openConnection(path);
     try {
