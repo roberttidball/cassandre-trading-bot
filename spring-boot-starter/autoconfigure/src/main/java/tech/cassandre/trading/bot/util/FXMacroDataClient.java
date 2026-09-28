@@ -24,6 +24,9 @@ public final class FXMacroDataClient {
   /** Read timeout in milliseconds. */
   private static final int READ_TIMEOUT_IN_MILLISECONDS = 20_000;
 
+  /** Maximum rows per page on list endpoints. */
+  private static final int MAX_PAGE_SIZE = 100;
+
   /** API key. */
   private final String apiKey;
 
@@ -74,6 +77,23 @@ public final class FXMacroDataClient {
   }
 
   /**
+   * Gets one page of announcement history for a currency indicator.
+   * List endpoints return 20 rows by default and at most 100 per request, newest first;
+   * request the next page with the response's {@code pagination.next_offset} while
+   * {@code pagination.has_more} is true.
+   *
+   * @param currency ISO 4217 currency code
+   * @param indicator FXMacroData indicator slug
+   * @param limit rows per page, 1 to 100
+   * @param offset rows to skip
+   * @return raw JSON response
+   * @throws IOException if the HTTP request fails
+   */
+  public String announcements(final String currency, final String indicator, final int limit, final int offset) throws IOException {
+    return get("/announcements/" + norm(currency) + "/" + pathSegment(indicator) + page(limit, offset));
+  }
+
+  /**
    * Gets the release calendar for a currency.
    *
    * @param currency ISO 4217 currency code
@@ -97,6 +117,23 @@ public final class FXMacroDataClient {
   }
 
   /**
+   * Gets one page of consensus predictions for a currency indicator.
+   * List endpoints return 20 rows by default and at most 100 per request, newest first;
+   * request the next page with the response's {@code pagination.next_offset} while
+   * {@code pagination.has_more} is true.
+   *
+   * @param currency ISO 4217 currency code
+   * @param indicator FXMacroData indicator slug
+   * @param limit rows per page, 1 to 100
+   * @param offset rows to skip
+   * @return raw JSON response
+   * @throws IOException if the HTTP request fails
+   */
+  public String predictions(final String currency, final String indicator, final int limit, final int offset) throws IOException {
+    return get("/predictions/" + norm(currency) + "/" + pathSegment(indicator) + page(limit, offset));
+  }
+
+  /**
    * Gets an FX spot-rate series.
    *
    * @param base base currency
@@ -109,6 +146,23 @@ public final class FXMacroDataClient {
   }
 
   /**
+   * Gets one page of an FX spot-rate series.
+   * List endpoints return 20 rows by default and at most 100 per request, newest first;
+   * request the next page with the response's {@code pagination.next_offset} while
+   * {@code pagination.has_more} is true.
+   *
+   * @param base base currency
+   * @param quote quote currency
+   * @param limit rows per page, 1 to 100
+   * @param offset rows to skip
+   * @return raw JSON response
+   * @throws IOException if the HTTP request fails
+   */
+  public String forex(final String base, final String quote, final int limit, final int offset) throws IOException {
+    return get("/forex/" + norm(base) + "/" + norm(quote) + page(limit, offset));
+  }
+
+  /**
    * Gets latest COT positioning for a currency.
    *
    * @param currency ISO 4217 currency code
@@ -117,6 +171,22 @@ public final class FXMacroDataClient {
    */
   public String cot(final String currency) throws IOException {
     return get("/cot/" + norm(currency));
+  }
+
+  /**
+   * Gets one page of COT positioning history for a currency.
+   * List endpoints return 20 rows by default and at most 100 per request, newest first;
+   * request the next page with the response's {@code pagination.next_offset} while
+   * {@code pagination.has_more} is true.
+   *
+   * @param currency ISO 4217 currency code
+   * @param limit rows per page, 1 to 100
+   * @param offset rows to skip
+   * @return raw JSON response
+   * @throws IOException if the HTTP request fails
+   */
+  public String cot(final String currency, final int limit, final int offset) throws IOException {
+    return get("/cot/" + norm(currency) + page(limit, offset));
   }
 
   /**
@@ -138,6 +208,22 @@ public final class FXMacroDataClient {
    */
   public String commodity(final String indicator) throws IOException {
     return get("/commodities/" + pathSegment(indicator));
+  }
+
+  /**
+   * Gets one page of a commodity series.
+   * List endpoints return 20 rows by default and at most 100 per request, newest first;
+   * request the next page with the response's {@code pagination.next_offset} while
+   * {@code pagination.has_more} is true.
+   *
+   * @param indicator FXMacroData commodity indicator slug
+   * @param limit rows per page, 1 to 100
+   * @param offset rows to skip
+   * @return raw JSON response
+   * @throws IOException if the HTTP request fails
+   */
+  public String commodity(final String indicator, final int limit, final int offset) throws IOException {
+    return get("/commodities/" + pathSegment(indicator) + page(limit, offset));
   }
 
   /**
@@ -216,6 +302,22 @@ public final class FXMacroDataClient {
   }
 
   /**
+   * Gets one page of central-bank press releases for a currency.
+   * List endpoints return 20 rows by default and at most 100 per request, newest first;
+   * request the next page with the response's {@code pagination.next_offset} while
+   * {@code pagination.has_more} is true.
+   *
+   * @param currency ISO 4217 currency code
+   * @param limit rows per page, 1 to 100
+   * @param offset rows to skip
+   * @return raw JSON response
+   * @throws IOException if the HTTP request fails
+   */
+  public String pressReleases(final String currency, final int limit, final int offset) throws IOException {
+    return get("/press-releases/" + norm(currency) + page(limit, offset));
+  }
+
+  /**
    * Gets central banker reference data for a currency.
    *
    * @param currency ISO 4217 currency code
@@ -264,6 +366,16 @@ public final class FXMacroDataClient {
 
   String buildUrl(final String path) {
     return baseUrl + path;
+  }
+
+  private static String page(final int limit, final int offset) {
+    if (limit < 1 || limit > MAX_PAGE_SIZE) {
+      throw new IllegalArgumentException("limit must be between 1 and " + MAX_PAGE_SIZE);
+    }
+    if (offset < 0) {
+      throw new IllegalArgumentException("offset must not be negative");
+    }
+    return "?limit=" + limit + "&offset=" + offset;
   }
 
   private static String norm(final String value) {
