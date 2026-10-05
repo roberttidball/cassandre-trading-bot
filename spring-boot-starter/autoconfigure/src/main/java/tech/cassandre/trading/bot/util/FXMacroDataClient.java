@@ -50,6 +50,9 @@ public final class FXMacroDataClient {
    */
   public FXMacroDataClient(final String valueApiKey, final String valueBaseUrl) {
     this.apiKey = blankToEmpty(valueApiKey);
+    if (this.apiKey.chars().anyMatch(c -> Character.isISOControl(c) || Character.isWhitespace(c))) {
+      throw new IllegalArgumentException("FXMacroData API key contains whitespace or control characters");
+    }
     this.baseUrl = trimSlash(valueBaseUrl);
   }
 
@@ -335,6 +338,8 @@ public final class FXMacroDataClient {
     connection.setRequestMethod("GET");
     connection.setConnectTimeout(CONNECT_TIMEOUT_IN_MILLISECONDS);
     connection.setReadTimeout(READ_TIMEOUT_IN_MILLISECONDS);
+    // Do not follow redirects, so the API key is never sent to another host.
+    connection.setInstanceFollowRedirects(false);
     if (!apiKey.isEmpty()) {
       connection.setRequestProperty("X-API-Key", apiKey);
     }
